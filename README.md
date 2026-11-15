@@ -18,12 +18,18 @@ The result is reduced to a coarse signature (for example reconnects
 none/some/all). A change is reported only once the new signature has been seen
 2 runs in a row, to ignore one-off network blips.
 
-- `state/state.json`: current signature per provider.
-- `state/history.jsonl`: raw numbers from every run.
+Every 6 hours, a second workflow measures how long each server keeps an idle
+connection open (up to 600s) over HTTP/2, and over HTTP/3 with `h3_idle.py`
+(aioquic) for providers that advertise it. Both use a long local idle timeout
+and send no pings, so the server's own limit is what ends the connection.
+
+- `state/state.json`, `state/lifetime.json`: current signature per provider.
+- `state/history.jsonl`, `state/lifetime-history.jsonl`: raw numbers from
+  every run.
 - Optional: add a `SLACK_WEBHOOK_URL` repository secret to also post changes to
   Slack.
 
-Run locally: `node probe.js [provider ...]`; set `CURL_H3` to a command that
+Run locally: `node probe.js [lifetime] [provider ...]`; set `CURL_H3` to a command that
 runs an HTTP/3 curl (for example `docker run --rm -i alpine/curl-http3 curl`)
 to include the HTTP/3 checks. Settings: `QUERIES`,
 `CONCURRENCY`, `DELAY_MS`, `IDLE_SECONDS`; `CONFIRM_RUNS` for `compare.js`.

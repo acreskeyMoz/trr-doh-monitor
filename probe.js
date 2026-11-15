@@ -2,10 +2,14 @@
 // providers that advertise it, and prints a JSON report: raw numbers plus a
 // normalized "signature" that only changes when a provider's behavior changes.
 //
-// Usage: node probe.js [provider ...]   (default: all providers)
+// Usage: node probe.js [lifetime] [provider ...]   (default: all providers)
 // Env: QUERIES (200), CONCURRENCY (1), DELAY_MS (50), IDLE_SECONDS (20),
 // CURL_H3: command that runs an HTTP/3-capable curl; the HTTP/3 checks are
 // skipped when it is unset.
+//
+// In lifetime mode it instead measures how long each server keeps an idle
+// connection open, up to MAX_IDLE_SECONDS (600), over HTTP/2 and, when H3_IDLE
+// (a command that runs h3_idle.py) is set, over HTTP/3.
 'use strict';
 const http2 = require('http2');
 const { spawn } = require('child_process');
@@ -24,6 +28,8 @@ const DELAY_MS = parseInt(process.env.DELAY_MS || '50', 10);
 const IDLE_SECONDS = parseInt(process.env.IDLE_SECONDS || '20', 10);
 const REQUEST_TIMEOUT_MS = 10000;
 const CURL_H3 = process.env.CURL_H3 ? process.env.CURL_H3.split(' ') : null;
+const MAX_IDLE_SECONDS = parseInt(process.env.MAX_IDLE_SECONDS || '600', 10);
+const H3_IDLE = process.env.H3_IDLE ? process.env.H3_IDLE.split(' ') : null;
 
 const DOMAINS = [
   'example.com', 'mozilla.org', 'google.com', 'wikipedia.org', 'cloudflare.com',
@@ -232,12 +238,95 @@ async function probe(name) {
   };
 }
 
+// Sends one query over HTTP/2 and returns whether it worked, whether h3 is
+// advertised, and a function that waits for the server to end the connection.
+async function h2Lifetime(url) {
+  const s = await openSession(url);
+  const ok = await query(s, url, 'example.com');
+  const h3Advertised = /\bh3=/.test(s.altSvc);
+  async function wait() {
+    if (!ok) {
+      s.session.destroy();
+      return { ok, end: s.end || 'first-query-failed' };
+    }
+    const start = Date.now();
+    const ended = new Promise(r => {
+      if (s.closed) return r();
+      s.session.on('goaway', r);
+      s.session.on('close', r);
+    });
+    await Promise.race([ended, sleep(MAX_IDLE_SECONDS * 1000)]);
+    const seconds = Math.min(Math.round((Date.now() - start) / 1000), MAX_IDLE_SECONDS);
+    const end = s.end || 'cap';
+    s.session.destroy();
+    return { ok, seconds, end };
+  }
+  return { h3Advertised, wait };
+}
+
+function h3Lifetime(url) {
+  return new Promise(resolve => {
+    const p = spawn(H3_IDLE[0], [...H3_IDLE.slice(1), url, String(MAX_IDLE_SECONDS)]);
+    let out = '';
+    p.stdout.on('data', d => (out += d));
+    p.on('error', e => resolve({ ok: false, error: e.code }));
+    p.on('close', () => {
+      try {
+        resolve(JSON.parse(out));
+      } catch (e) {
+        resolve({ ok: false, error: 'bad-output' });
+      }
+    });
+  });
+}
+
+// Coarse lifetime ranges, so a few seconds of jitter doesn't count as a change.
+function lifetimeBucket(r) {
+  if (!r.ok || r.seconds === undefined) return 'failed';
+  if (r.seconds >= MAX_IDLE_SECONDS) return `>=${MAX_IDLE_SECONDS}s`;
+  const edges = [0, 10, 20, 45, 90, 150, 240, 420, MAX_IDLE_SECONDS];
+  const i = edges.findIndex(e => r.seconds < e);
+  return `${edges[i - 1]}-${edges[i]}s`;
+}
+
+async function lifetime(name) {
+  const url = PROVIDERS[name];
+  const h2 = await h2Lifetime(url);
+  // Some servers occasionally close right after a response, which the request
+  // series already reports, so retry those to measure the idle lifetime.
+  async function h2Wait() {
+    let r = await h2.wait();
+    let earlyCloses = 0;
+    while (r.ok && r.seconds < 5 && earlyCloses < 3) {
+      earlyCloses++;
+      r = await (await h2Lifetime(url)).wait();
+    }
+    return { ...r, earlyCloses };
+  }
+  const [h2Result, h3] = await Promise.all([
+    h2Wait(),
+    h2.h3Advertised && H3_IDLE ? h3Lifetime(url) : null,
+  ]);
+  return {
+    raw: { h2: h2Result, h3 },
+    signature: {
+      h2: { lifetime: lifetimeBucket(h2Result), end: h2Result.end },
+      h3: h3 && { lifetime: lifetimeBucket(h3), end: h3.end || h3.error || null },
+    },
+  };
+}
+
 async function main() {
-  const names = process.argv.length > 2 ? process.argv.slice(2) : Object.keys(PROVIDERS);
-  const results = await Promise.all(names.map(probe));
+  const args = process.argv.slice(2);
+  const lifetimeMode = args[0] == 'lifetime';
+  if (lifetimeMode) args.shift();
+  const names = args.length ? args : Object.keys(PROVIDERS);
+  const results = await Promise.all(names.map(lifetimeMode ? lifetime : probe));
   const report = {
     time: new Date().toISOString(),
-    settings: { QUERIES, CONCURRENCY, DELAY_MS, IDLE_SECONDS },
+    settings: lifetimeMode
+      ? { MAX_IDLE_SECONDS }
+      : { QUERIES, CONCURRENCY, DELAY_MS, IDLE_SECONDS },
     providers: Object.fromEntries(names.map((n, i) => [n, results[i]])),
   };
   console.log(JSON.stringify(report, null, 2));

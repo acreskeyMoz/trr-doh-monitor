@@ -42,22 +42,7 @@ for (const [name, { signature }] of Object.entries(report.providers)) {
 fs.writeFileSync(statePath, JSON.stringify(state, null, 2) + '\n');
 
 const summary = Object.fromEntries(
-  Object.entries(report.providers).map(([n, { raw }]) => [
-    n,
-    {
-      h2Alpn: raw.series.alpn,
-      reconnects: raw.series.connections - 1,
-      failures: raw.series.failures,
-      ends: raw.series.ends,
-      idleSurvived: raw.idle.survived,
-      idleEnd: raw.idle.end,
-      h3: raw.h3 && {
-        reconnects: Math.max(raw.h3.series.connections - 1, 0),
-        failures: raw.h3.series.failures,
-        idleSurvived: raw.h3.idle.survived,
-      },
-    },
-  ])
+  Object.entries(report.providers).map(([n, { raw }]) => [n, raw])
 );
 fs.appendFileSync(
   historyPath,

@@ -1,0 +1,66 @@
+name: TRR idle lifetime
+
+on:
+  schedule:
+    - cron: "47 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: lifetime
+  cancel-in-progress: false
+
+jobs:
+  lifetime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install aioquic
+        run: |
+          python3 -m venv venv
+          venv/bin/pip install -q aioquic==1.8.0
+
+      - name: Measure idle lifetimes
+        env:
+          H3_IDLE: venv/bin/python3 h3_idle.py
+        run: node probe.js lifetime > report.json
+
+      - name: Compare with previous runs
+        run: node compare.js report.json state/lifetime.json state/lifetime-history.jsonl change.md
+
+      - name: Save state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state
+          git commit -q -m "Lifetime results $(date -u +%FT%TZ)" || exit 0
+          git pull -q --rebase && git push
+
+      - name: Open an issue on change
+        if: hashFiles('change.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "TRR idle lifetime changed $(date -u +%F)" --body-file change.md
+
+      - name: Post to Slack on change
+        if: hashFiles('change.md') != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          [ -n "$SLACK_WEBHOOK_URL" ] || exit 0
+          jq -n --rawfile t change.md '{text: ("TRR idle lifetime changed\n" + $t)}' \
+            | curl -sf -X POST -H 'Content-Type: application/json' --data @- "$SLACK_WEBHOOK_URL"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lifetime-report
+          path: report.json

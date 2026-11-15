@@ -1,2 +1,4 @@
 report.json
 change.md
+venv/
+__pycache__/
