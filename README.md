@@ -10,6 +10,9 @@ Each run, per provider (about 20s in total):
   how often the server closed the connection (and how: GOAWAY, close, reset).
 - Whether the server advertises HTTP/3 through Alt-Svc.
 - Whether a connection survives 20s of idle.
+- For providers that advertise HTTP/3: the same query series and idle check
+  over HTTP/3, using curl (Node has no HTTP/3 client) from the
+  `alpine/curl-http3` image.
 
 The result is reduced to a coarse signature (for example reconnects
 none/some/all). A change is reported only once the new signature has been seen
@@ -20,5 +23,7 @@ none/some/all). A change is reported only once the new signature has been seen
 - Optional: add a `SLACK_WEBHOOK_URL` repository secret to also post changes to
   Slack.
 
-Run locally: `node probe.js [provider ...]`. Settings: `QUERIES`,
+Run locally: `node probe.js [provider ...]`; set `CURL_H3` to a command that
+runs an HTTP/3 curl (for example `docker run --rm -i alpine/curl-http3 curl`)
+to include the HTTP/3 checks. Settings: `QUERIES`,
 `CONCURRENCY`, `DELAY_MS`, `IDLE_SECONDS`; `CONFIRM_RUNS` for `compare.js`.

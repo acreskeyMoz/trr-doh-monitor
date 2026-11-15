@@ -1,11 +1,14 @@
-// Probes Firefox's TRR partner DoH servers over HTTP/2 and prints a JSON
-// report: raw numbers plus a normalized "signature" that only changes when a
-// provider's behavior changes.
+// Probes Firefox's TRR partner DoH servers over HTTP/2, and over HTTP/3 for
+// providers that advertise it, and prints a JSON report: raw numbers plus a
+// normalized "signature" that only changes when a provider's behavior changes.
 //
 // Usage: node probe.js [provider ...]   (default: all providers)
-// Env: QUERIES (200), CONCURRENCY (1), DELAY_MS (50), IDLE_SECONDS (20)
+// Env: QUERIES (200), CONCURRENCY (1), DELAY_MS (50), IDLE_SECONDS (20),
+// CURL_H3: command that runs an HTTP/3-capable curl; the HTTP/3 checks are
+// skipped when it is unset.
 'use strict';
 const http2 = require('http2');
+const { spawn } = require('child_process');
 
 const PROVIDERS = {
   cloudflare: 'https://mozilla.cloudflare-dns.com/dns-query',
@@ -20,6 +23,7 @@ const CONCURRENCY = parseInt(process.env.CONCURRENCY || '1', 10);
 const DELAY_MS = parseInt(process.env.DELAY_MS || '50', 10);
 const IDLE_SECONDS = parseInt(process.env.IDLE_SECONDS || '20', 10);
 const REQUEST_TIMEOUT_MS = 10000;
+const CURL_H3 = process.env.CURL_H3 ? process.env.CURL_H3.split(' ') : null;
 
 const DOMAINS = [
   'example.com', 'mozilla.org', 'google.com', 'wikipedia.org', 'cloudflare.com',
@@ -148,6 +152,54 @@ async function idle(url) {
   return { survived, end };
 }
 
+// Runs curl over HTTP/3 only, one query per name, at the given rate (curl's
+// --rate syntax). Resolves with the number of failed queries and the number of
+// connections opened.
+function curlH3(url, names, rate) {
+  return new Promise(resolve => {
+    let config = [
+      'http3-only',
+      'silent',
+      `rate = "${rate}"`,
+      `max-time = ${REQUEST_TIMEOUT_MS / 1000}`,
+      'header = "accept: application/dns-message"',
+      'write-out = "%{http_code} %{http_version} %{num_connects}\\n"',
+    ];
+    for (const name of names) {
+      const dns = encodeQuery(name).toString('base64url');
+      config.push(`url = "${url}?dns=${dns}"`, 'output = "/dev/null"');
+    }
+    const curl = spawn(CURL_H3[0], [...CURL_H3.slice(1), '-K', '-']);
+    let out = '';
+    curl.stdout.on('data', d => (out += d));
+    curl.on('error', () => resolve({ failures: names.length, connections: 0, missing: true }));
+    curl.on('close', () => {
+      const lines = out.trim().split('\n').filter(Boolean);
+      let failures = names.length - lines.length;
+      let connections = 0;
+      for (const line of lines) {
+        const [code, version, connects] = line.split(' ');
+        if (code != '200' || version != '3') failures++;
+        connections += parseInt(connects, 10) || 0;
+      }
+      resolve({ failures, connections });
+    });
+    curl.stdin.end(config.join('\n') + '\n');
+  });
+}
+
+async function h3(url) {
+  const names = Array.from({ length: QUERIES }, (_, i) => DOMAINS[i % DOMAINS.length]);
+  const [series, idle] = await Promise.all([
+    curlH3(url, names, `${Math.round(1000 / Math.max(DELAY_MS, 1))}/s`),
+    curlH3(url, ['example.com', 'example.com'], `${Math.round(60 / IDLE_SECONDS)}/m`),
+  ]);
+  return {
+    series,
+    idle: { survived: idle.failures == 0 && idle.connections == 1 },
+  };
+}
+
 function bucket(n, total) {
   if (n == 0) return 'none';
   return n >= total ? 'all' : 'some';
@@ -155,16 +207,27 @@ function bucket(n, total) {
 
 async function probe(name) {
   const url = PROVIDERS[name];
-  const [s, i] = await Promise.all([series(url), idle(url)]);
+  const idleDone = idle(url);
+  const s = await series(url);
+  const h3Advertised = /\bh3=/.test(s.altSvc);
+  const [i, q] = await Promise.all([
+    idleDone,
+    h3Advertised && CURL_H3 ? h3(url) : null,
+  ]);
   return {
-    raw: { series: s, idle: i },
+    raw: { series: s, idle: i, h3: q },
     signature: {
-      alpn: s.alpn,
-      h3Advertised: /\bh3=/.test(s.altSvc),
+      h2Alpn: s.alpn,
+      h3Advertised,
       failures: bucket(s.failures, QUERIES),
       reconnects: bucket(s.connections - 1, QUERIES),
       closeKinds: [...new Set(s.ends)].sort(),
       idleSurvived: i.survived,
+      h3: q && {
+        failures: bucket(q.series.failures, QUERIES),
+        reconnects: bucket(Math.max(q.series.connections - 1, 0), QUERIES),
+        idleSurvived: q.idle.survived,
+      },
     },
   };
 }

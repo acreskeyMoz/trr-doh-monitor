@@ -13,18 +13,26 @@ concurrency:
   group: probe
   cancel-in-progress: false
 
+env:
+  CURL_H3_IMAGE: alpine/curl-http3:8.11.0@sha256:b0cb55696adcaf5714958926a28ce78a5fa72f6a4aa8df2ec5b72f1cde8038e3
+
 jobs:
   probe:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
+      - name: Pull HTTP/3 curl
+        run: docker pull -q "$CURL_H3_IMAGE"
+
       - name: Probe providers
+        env:
+          CURL_H3: docker run --rm -i ${{ env.CURL_H3_IMAGE }} curl
         run: node probe.js > report.json
 
       - name: Compare with previous runs
@@ -53,7 +61,7 @@ jobs:
           jq -n --rawfile t change.md '{text: ("TRR provider behavior changed\n" + $t)}' \
             | curl -sf -X POST -H 'Content-Type: application/json' --data @- "$SLACK_WEBHOOK_URL"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: report
           path: report.json

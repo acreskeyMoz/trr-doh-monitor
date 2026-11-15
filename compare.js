@@ -45,12 +45,17 @@ const summary = Object.fromEntries(
   Object.entries(report.providers).map(([n, { raw }]) => [
     n,
     {
-      alpn: raw.series.alpn,
+      h2Alpn: raw.series.alpn,
       reconnects: raw.series.connections - 1,
       failures: raw.series.failures,
       ends: raw.series.ends,
       idleSurvived: raw.idle.survived,
       idleEnd: raw.idle.end,
+      h3: raw.h3 && {
+        reconnects: Math.max(raw.h3.series.connections - 1, 0),
+        failures: raw.h3.series.failures,
+        idleSurvived: raw.h3.idle.survived,
+      },
     },
   ])
 );
