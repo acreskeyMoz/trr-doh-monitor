@@ -1,6 +1,6 @@
 # TRR DoH monitor status
 
-Updated 2026-11-15 15:44 UTC. Last request probe: 2026-11-15 15:19 UTC. Last idle lifetime run: 2026-11-15 15:42 UTC.
+Updated 2026-11-15 15:45 UTC. Last request probe: 2026-11-15 15:45 UTC. Last idle lifetime run: 2026-11-15 15:42 UTC.
 
 ✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed.
 
@@ -10,7 +10,7 @@ Updated 2026-11-15 15:44 UTC. Last request probe: 2026-11-15 15:19 UTC. Last idl
 |---|---|---|---|---|---|---|---|---|
 | cloudflare | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC |
 | nextdns | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
-| cira | ✅ | ⚠️ 16 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
+| cira | ✅ | ⚠️ 19 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
 | wikimedia | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
 | quad9 | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC |
 
@@ -28,9 +28,9 @@ Updated 2026-11-15 15:44 UTC. Last request probe: 2026-11-15 15:19 UTC. Last idl
 ```mermaid
 xychart-beta
   title "cira: h2 reconnects per run"
-  x-axis ["15 15h", "15 15h"]
-  y-axis "reconnects" 0 --> 16
-  bar [11, 16]
+  x-axis ["15 15h", "15 15h", "15 15h"]
+  y-axis "reconnects" 0 --> 19
+  bar [11, 16, 19]
 ```
 
 No h2 reconnects in any run: cloudflare, nextdns, wikimedia, quad9.
