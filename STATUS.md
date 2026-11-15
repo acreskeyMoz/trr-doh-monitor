@@ -1,6 +1,6 @@
 # TRR DoH monitor status
 
-Updated 2026-11-15 21:05 UTC. Last request probe: 2026-11-15 21:05 UTC. Last idle lifetime run: 2026-11-15 15:42 UTC.
+Updated 2026-11-15 23:21 UTC. Last request probe: 2026-11-15 21:05 UTC. Last idle lifetime run: 2026-11-15 23:18 UTC.
 
 ✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed.
 
@@ -18,9 +18,9 @@ Updated 2026-11-15 21:05 UTC. Last request probe: 2026-11-15 21:05 UTC. Last idl
 
 | provider | h2 | h3 | since |
 |---|---|---|---|
-| cloudflare | 600s, still open at cap | 180s, QUIC idle timeout | 2026-11-15 15:42 UTC |
+| cloudflare | 400s, still open at cap | 180s, QUIC idle timeout | 2026-11-15 15:42 UTC (new value seen 1×) |
 | nextdns | 180s, GOAWAY (0) | — | 2026-11-15 15:42 UTC |
-| cira | 600s, still open at cap | — | 2026-11-15 15:42 UTC |
+| cira | 401s, still open at cap | — | 2026-11-15 15:42 UTC (new value seen 1×) |
 | quad9 | 181s, closed | 180s, QUIC idle timeout | 2026-11-15 15:42 UTC |
 
 ## Last 7 days
@@ -29,6 +29,7 @@ Idle lifetime by run (h2 / h3, seconds):
 
 | run | cloudflare | nextdns | cira | quad9 |
 |---|---|---|---|---|
+| 2026-11-15 23:18 UTC | 400 / 180 | 180 / — | 401 / — | 181 / 180 |
 | 2026-11-15 15:42 UTC | 600 / 180 | 180 / — | 600 / — | 181 / 180 |
 
 ## Recent changes
