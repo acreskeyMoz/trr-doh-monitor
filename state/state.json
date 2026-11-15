@@ -1,0 +1,64 @@
+{
+  "cloudflare": {
+    "current": {
+      "alpn": "h2",
+      "h3Advertised": true,
+      "failures": "none",
+      "reconnects": "none",
+      "closeKinds": [],
+      "idleSurvived": true
+    },
+    "since": "2026-11-15T15:06:46.254Z",
+    "pending": null
+  },
+  "nextdns": {
+    "current": {
+      "alpn": "h2",
+      "h3Advertised": false,
+      "failures": "none",
+      "reconnects": "none",
+      "closeKinds": [],
+      "idleSurvived": true
+    },
+    "since": "2026-11-15T15:06:46.254Z",
+    "pending": null
+  },
+  "cira": {
+    "current": {
+      "alpn": "h2",
+      "h3Advertised": false,
+      "failures": "none",
+      "reconnects": "some",
+      "closeKinds": [
+        "close"
+      ],
+      "idleSurvived": true
+    },
+    "since": "2026-11-15T15:06:46.254Z",
+    "pending": null
+  },
+  "wikimedia": {
+    "current": {
+      "alpn": "h2",
+      "h3Advertised": false,
+      "failures": "none",
+      "reconnects": "none",
+      "closeKinds": [],
+      "idleSurvived": true
+    },
+    "since": "2026-11-15T15:06:46.254Z",
+    "pending": null
+  },
+  "quad9": {
+    "current": {
+      "alpn": "h2",
+      "h3Advertised": true,
+      "failures": "none",
+      "reconnects": "none",
+      "closeKinds": [],
+      "idleSurvived": true
+    },
+    "since": "2026-11-15T15:06:46.254Z",
+    "pending": null
+  }
+}
