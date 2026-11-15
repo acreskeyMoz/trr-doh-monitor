@@ -37,11 +37,19 @@ jobs:
       - name: Compare with previous runs
         run: node compare.js report.json state/lifetime.json state/lifetime-history.jsonl change.md
 
+      - name: Update status page
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue list --state all --limit 5 --json number,title,createdAt,url > issues.json
+          node status.js issues.json > STATUS.md
+          cat STATUS.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Save state
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state
+          git add state STATUS.md
           git commit -q -m "Lifetime results $(date -u +%FT%TZ)" || exit 0
           git pull -q --rebase && git push
 

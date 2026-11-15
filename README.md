@@ -1,5 +1,7 @@
 # TRR DoH monitor
 
+**[Current status](STATUS.md)**
+
 Probes Firefox's TRR partner DoH servers (Cloudflare, NextDNS, CIRA, Wikimedia,
 Quad9) every 2 hours from GitHub Actions and opens an issue when a provider's
 behavior changes.
