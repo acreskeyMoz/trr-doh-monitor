@@ -1,0 +1,59 @@
+name: TRR DoH probe
+
+on:
+  schedule:
+    - cron: "17 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Probe providers
+        run: node probe.js > report.json
+
+      - name: Compare with previous runs
+        run: node compare.js report.json state/state.json state/history.jsonl change.md
+
+      - name: Save state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state
+          git commit -q -m "Probe results $(date -u +%FT%TZ)" || exit 0
+          git push
+
+      - name: Open an issue on change
+        if: hashFiles('change.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "TRR provider behavior changed $(date -u +%F)" --body-file change.md
+
+      - name: Post to Slack on change
+        if: hashFiles('change.md') != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          [ -n "$SLACK_WEBHOOK_URL" ] || exit 0
+          jq -n --rawfile t change.md '{text: ("TRR provider behavior changed\n" + $t)}' \
+            | curl -sf -X POST -H 'Content-Type: application/json' --data @- "$SLACK_WEBHOOK_URL"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: report
+          path: report.json
