@@ -18,7 +18,8 @@ The result is reduced to a coarse signature (for example reconnects
 none/some/all). A change is reported only once the new signature has been seen
 2 runs in a row, to ignore one-off network blips.
 
-Every 6 hours, a second workflow measures how long each server keeps an idle
+Every 6 hours, a second workflow measures how long each server (all but
+Wikimedia) keeps an idle
 connection open (up to 600s) over HTTP/2, and over HTTP/3 with `h3_idle.py`
 (aioquic) for providers that advertise it. Both use a long local idle timeout
 and send no pings, so the server's own limit is what ends the connection.

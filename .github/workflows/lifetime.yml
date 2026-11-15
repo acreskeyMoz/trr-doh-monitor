@@ -32,7 +32,7 @@ jobs:
       - name: Measure idle lifetimes
         env:
           H3_IDLE: venv/bin/python3 h3_idle.py
-        run: node probe.js lifetime > report.json
+        run: node probe.js lifetime cloudflare nextdns cira quad9 > report.json
 
       - name: Compare with previous runs
         run: node compare.js report.json state/lifetime.json state/lifetime-history.jsonl change.md
