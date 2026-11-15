@@ -35,17 +35,6 @@
     "since": "2026-11-15T15:42:51.361Z",
     "pending": null
   },
-  "wikimedia": {
-    "current": {
-      "h2": {
-        "lifetime": "20-45s",
-        "end": "goaway-0"
-      },
-      "h3": null
-    },
-    "since": "2026-11-15T15:42:51.361Z",
-    "pending": null
-  },
   "quad9": {
     "current": {
       "h2": {
