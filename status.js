@@ -80,25 +80,6 @@ for (const [name, p] of Object.entries(lifetime)) {
 }
 
 out += `\n## Last ${DAYS} days\n\n`;
-const label = t => t.slice(8, 10) + ' ' + t.slice(11, 13) + 'h';
-let quiet = [];
-for (const name of Object.keys(probe)) {
-  const runs = probeHistory.filter(r => r.providers[name]);
-  const values = runs.map(r => reconnects(r.providers[name]));
-  if (!values.some(v => v > 0)) {
-    quiet.push(name);
-    continue;
-  }
-  out += '```mermaid\nxychart-beta\n';
-  out += `  title "${name}: h2 reconnects per run"\n`;
-  out += `  x-axis [${runs.map(r => `"${label(r.time)}"`).join(', ')}]\n`;
-  out += `  y-axis "reconnects" 0 --> ${Math.max(...values, 1)}\n`;
-  out += `  bar [${values.join(', ')}]\n` + '```\n\n';
-}
-if (quiet.length) {
-  out += `No h2 reconnects in any run: ${quiet.join(', ')}.\n\n`;
-}
-
 if (lifetimeHistory.length) {
   const names = Object.keys(lifetime);
   out += `Idle lifetime by run (h2 / h3, seconds):\n\n`;

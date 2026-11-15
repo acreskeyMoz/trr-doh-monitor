@@ -1,6 +1,6 @@
 # TRR DoH monitor status
 
-Updated 2026-11-15 15:45 UTC. Last request probe: 2026-11-15 15:45 UTC. Last idle lifetime run: 2026-11-15 15:42 UTC.
+Updated 2026-11-15 15:53 UTC. Last request probe: 2026-11-15 15:45 UTC. Last idle lifetime run: 2026-11-15 15:42 UTC.
 
 ✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed.
 
@@ -24,16 +24,6 @@ Updated 2026-11-15 15:45 UTC. Last request probe: 2026-11-15 15:45 UTC. Last idl
 | quad9 | 181s, closed | 180s, QUIC idle timeout | 2026-11-15 15:42 UTC |
 
 ## Last 7 days
-
-```mermaid
-xychart-beta
-  title "cira: h2 reconnects per run"
-  x-axis ["15 15h", "15 15h", "15 15h"]
-  y-axis "reconnects" 0 --> 19
-  bar [11, 16, 19]
-```
-
-No h2 reconnects in any run: cloudflare, nextdns, wikimedia, quad9.
 
 Idle lifetime by run (h2 / h3, seconds):
 
