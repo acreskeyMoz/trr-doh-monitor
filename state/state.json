@@ -42,21 +42,7 @@
       "h3": null
     },
     "since": "2026-11-15T15:19:51.088Z",
-    "pending": {
-      "signature": {
-        "h2Alpn": "h2",
-        "h3Advertised": false,
-        "failures": "some",
-        "reconnects": "some",
-        "closeKinds": [
-          "close"
-        ],
-        "idleSurvived": false,
-        "h3": null
-      },
-      "runs": 1,
-      "first": "2026-11-15T21:05:10.300Z"
-    }
+    "pending": null
   },
   "wikimedia": {
     "current": {
