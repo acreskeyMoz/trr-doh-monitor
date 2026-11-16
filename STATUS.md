@@ -1,8 +1,8 @@
 # TRR DoH monitor status
 
-Updated 2026-11-16 16:28 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
+Updated 2026-11-16 17:21 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
 
-✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed.
+✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed. Values are from the latest run; "since" is when the confirmed state began.
 
 ## Request series and 20s idle
 
@@ -10,9 +10,9 @@ Updated 2026-11-16 16:28 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idl
 |---|---|---|---|---|---|---|---|---|
 | cloudflare | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC |
 | nextdns | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
-| cira | ✅ | ⚠️ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC (new value seen 1×) |
+| cira | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC → **changed 2026-11-16 15:56 UTC, not yet confirmed (1 run)** |
 | wikimedia | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
-| quad9 | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC (new value seen 1×) |
+| quad9 | ✅ | ✅ 0 | ✅ | advertised | ⚠️ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC → **changed 2026-11-16 15:56 UTC, not yet confirmed (1 run)** |
 
 ## Timing
 

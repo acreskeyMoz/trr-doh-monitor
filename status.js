@@ -34,7 +34,11 @@ const END_LABELS = {
 };
 const endLabel = e =>
   END_LABELS[e] || (e && e.startsWith('goaway-') ? `GOAWAY (${e.slice(7)})` : e);
-const pending = p => (p.pending ? ` (new value seen ${p.pending.runs}×)` : '');
+// Rows show the latest run's values; a value not yet seen CONFIRM_RUNS times in
+// a row is marked as changed but not yet confirmed (no alert sent yet).
+const latest = p => (p.pending ? p.pending.signature : p.current);
+const pending = p =>
+  p.pending ? ` → **changed ${day(p.pending.first)}, not yet confirmed (${p.pending.runs} run)**` : '';
 
 // Old history lines stored a summary instead of the raw results.
 function reconnects(p) {
@@ -50,13 +54,13 @@ const last = probeHistory.at(-1);
 out += `Updated ${day(new Date().toISOString())}. `;
 out += `Last request probe: ${last ? day(last.time) : 'none'}. `;
 out += `Last idle lifetime run: ${lifetimeHistory.length ? day(lifetimeHistory.at(-1).time) : 'none'}.\n\n`;
-out += `✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed.\n\n`;
+out += `✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed. Values are from the latest run; "since" is when the confirmed state began.\n\n`;
 
 out += `## Request series and 20s idle\n\n`;
 out += `| provider | h2 failures | h2 reconnects | h2 idle | h3 | h3 failures | h3 reconnects | h3 idle | since |\n`;
 out += `|---|---|---|---|---|---|---|---|---|\n`;
 for (const [name, p] of Object.entries(probe)) {
-  const c = p.current;
+  const c = latest(p);
   const raw = last && last.providers[name];
   const n = raw ? ` ${reconnects(raw)}` : '';
   const h3n = raw && h3Reconnects(raw) !== null ? ` ${h3Reconnects(raw)}` : '';
@@ -122,7 +126,7 @@ for (const [name, p] of Object.entries(lifetime)) {
     sig
       ? `${r && r.seconds !== undefined ? r.seconds + 's' : sig.lifetime}, ${endLabel(sig.end)}`
       : '—';
-  out += `| ${name} | ${fmt(p.current.h2, raw && raw.h2)} | ${fmt(p.current.h3, raw && raw.h3)} | ${day(p.since)}${pending(p)} |\n`;
+  out += `| ${name} | ${fmt(latest(p).h2, raw && raw.h2)} | ${fmt(latest(p).h3, raw && raw.h3)} | ${day(p.since)}${pending(p)} |\n`;
 }
 
 out += `\n## Last ${DAYS} days\n\n`;
