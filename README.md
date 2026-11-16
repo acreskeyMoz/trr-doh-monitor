@@ -12,6 +12,8 @@ Each run, per provider (about 20s in total):
   how often the server closed the connection (and how: GOAWAY, close, reset).
 - Whether the server advertises HTTP/3 through Alt-Svc.
 - Whether a connection survives 20s of idle.
+- Connection time (TCP and TLS for h2, QUIC handshake for h3) and per-query
+  response time, shown on the status page but not used for alerts.
 - For providers that advertise HTTP/3: the same query series and idle check
   over HTTP/3, using curl (Node has no HTTP/3 client) from the
   `alpine/curl-http3` image.

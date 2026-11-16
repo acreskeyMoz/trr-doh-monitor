@@ -67,6 +67,23 @@ for (const [name, p] of Object.entries(probe)) {
   out += `${c.h3Advertised ? 'advertised' : 'no'} | ${h3.join(' | ')} | ${day(p.since)}${pending(p)} |\n`;
 }
 
+out += `\n## Timing (ms)\n\n`;
+out += `Latest run, median / 90th percentile. Connect is per new connection (h2: TCP + TLS; h3: QUIC handshake); response is per query on an open connection. ${DAYS}-day column: median of each run's median response time.\n\n`;
+out += `| provider | h2 connect (TCP + TLS) | h2 response | h3 connect | h3 response | h2 / h3 response, ${DAYS} days |\n`;
+out += `|---|---|---|---|---|---|\n`;
+const mp = x => (x ? `${x.median} / ${x.p90}` : '—');
+const median = v => (v.length ? [...v].sort((a, b) => a - b)[Math.floor(v.length / 2)] : null);
+for (const name of Object.keys(probe)) {
+  const raw = last && last.providers[name];
+  const t = raw && raw.series && raw.series.timing;
+  const t3 = raw && raw.h3 && raw.h3.series && raw.h3.series.timing;
+  const connect = t && t.tcp && t.tls ? `${t.tcp.median} + ${t.tls.median}` : '—';
+  const runs = probeHistory.map(r => r.providers[name]).filter(Boolean);
+  const h2Week = median(runs.map(p => p.series && p.series.timing && p.series.timing.response && p.series.timing.response.median).filter(v => v != null));
+  const h3Week = median(runs.map(p => p.h3 && p.h3.series && p.h3.series.timing && p.h3.series.timing.response && p.h3.series.timing.response.median).filter(v => v != null));
+  out += `| ${name} | ${connect} | ${mp(t && t.response)} | ${mp(t3 && t3.handshake)} | ${mp(t3 && t3.response)} | ${h2Week ?? '—'} / ${h3Week ?? '—'} |\n`;
+}
+
 out += `\n## Idle lifetime\n\n`;
 out += `| provider | h2 | h3 | since |\n|---|---|---|---|\n`;
 const lastLife = lifetimeHistory.at(-1);

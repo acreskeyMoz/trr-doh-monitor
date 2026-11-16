@@ -12,6 +12,7 @@
 // (a command that runs h3_idle.py) is set, over HTTP/3.
 'use strict';
 const http2 = require('http2');
+const tls = require('tls');
 const { spawn } = require('child_process');
 
 const PROVIDERS = {
@@ -37,6 +38,15 @@ const DOMAINS = [
 ];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const now = () => Number(process.hrtime.bigint()) / 1e6;
+
+// Median, 90th percentile and max of a list of milliseconds, rounded.
+function stats(values) {
+  if (!values.length) return null;
+  const v = [...values].sort((a, b) => a - b);
+  const pick = q => Math.round(v[Math.min(v.length - 1, Math.floor(v.length * q))]);
+  return { median: pick(0.5), p90: pick(0.9), max: Math.round(v[v.length - 1]), n: v.length };
+}
 
 function encodeQuery(name) {
   const bytes = [0, 0, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0];
@@ -47,11 +57,26 @@ function encodeQuery(name) {
   return Buffer.from(bytes);
 }
 
-// A single HTTP/2 session that records how it ended.
+// A single HTTP/2 session that records how long the TCP connect and TLS
+// handshake took, and how it ended.
 function openSession(url) {
   return new Promise(resolve => {
-    const s = { closed: false, end: null, altSvc: '' };
-    s.session = http2.connect(new URL(url).origin);
+    const s = { closed: false, end: null, altSvc: '', timing: null };
+    const host = new URL(url).hostname;
+    const start = now();
+    let lookup = start;
+    let tcp = start;
+    s.session = http2.connect(new URL(url).origin, {
+      createConnection: () => {
+        const socket = tls.connect({ host, port: 443, servername: host, ALPNProtocols: ['h2'] });
+        socket.once('lookup', () => (lookup = now()));
+        socket.once('connect', () => (tcp = now()));
+        socket.once('secureConnect', () => {
+          s.timing = { tcpMs: tcp - lookup, tlsMs: now() - tcp };
+        });
+        return socket;
+      },
+    });
     const settle = () => resolve(s);
     s.session.on('connect', settle);
     s.session.on('goaway', code => {
@@ -70,10 +95,12 @@ function openSession(url) {
   });
 }
 
-// Sends one DoH query; resolves with true if it got a usable DNS answer.
+// Sends one DoH query; resolves with true if it got a usable DNS answer, and
+// records the response time in s.lastMs.
 function query(s, url, name) {
   return new Promise(resolve => {
     if (s.closed || s.session.destroyed) return resolve(false);
+    const start = now();
     const body = encodeQuery(name);
     let req;
     try {
@@ -102,6 +129,7 @@ function query(s, url, name) {
       clearTimeout(timer);
       const buf = Buffer.concat(chunks);
       const rcode = buf.length >= 12 ? buf[3] & 0x0f : -1;
+      s.lastMs = now() - start;
       resolve(status == 200 && (rcode == 0 || rcode == 3));
     });
     req.on('error', () => {
@@ -122,6 +150,16 @@ async function series(url) {
     failures: 0,
     ends: [],
   };
+  const tcpMs = [];
+  const tlsMs = [];
+  const responseMs = [];
+  const recordConnect = () => {
+    if (s.timing) {
+      tcpMs.push(s.timing.tcpMs);
+      tlsMs.push(s.timing.tlsMs);
+    }
+  };
+  recordConnect();
   let next = 0;
   async function worker() {
     while (next < QUERIES) {
@@ -130,8 +168,11 @@ async function series(url) {
         result.ends.push(s.end);
         result.connections++;
         s = await openSession(url);
+        recordConnect();
       }
-      if (!(await query(s, url, DOMAINS[i % DOMAINS.length]))) {
+      if (await query(s, url, DOMAINS[i % DOMAINS.length])) {
+        responseMs.push(s.lastMs);
+      } else {
         result.failures++;
       }
       if (DELAY_MS) await sleep(DELAY_MS);
@@ -140,6 +181,7 @@ async function series(url) {
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
   result.alpn = s.session.alpnProtocol || '';
   result.altSvc = s.altSvc;
+  result.timing = { tcp: stats(tcpMs), tls: stats(tlsMs), response: stats(responseMs) };
   s.session.close();
   return result;
 }
@@ -169,7 +211,7 @@ function curlH3(url, names, rate) {
       `rate = "${rate}"`,
       `max-time = ${REQUEST_TIMEOUT_MS / 1000}`,
       'header = "accept: application/dns-message"',
-      'write-out = "%{http_code} %{http_version} %{num_connects}\\n"',
+      'write-out = "%{http_code} %{http_version} %{num_connects} %{time_namelookup} %{time_appconnect} %{time_pretransfer} %{time_total}\\n"',
     ];
     for (const name of names) {
       const dns = encodeQuery(name).toString('base64url');
@@ -183,12 +225,22 @@ function curlH3(url, names, rate) {
       const lines = out.trim().split('\n').filter(Boolean);
       let failures = names.length - lines.length;
       let connections = 0;
+      const handshakeMs = [];
+      const responseMs = [];
       for (const line of lines) {
-        const [code, version, connects] = line.split(' ');
-        if (code != '200' || version != '3') failures++;
-        connections += parseInt(connects, 10) || 0;
+        const [code, version, connects, lookup, appconnect, pretransfer, total] = line.split(' ');
+        const ok = code == '200' && version == '3';
+        if (!ok) failures++;
+        const n = parseInt(connects, 10) || 0;
+        connections += n;
+        if (n && ok) handshakeMs.push((appconnect - lookup) * 1000);
+        if (ok) responseMs.push((total - pretransfer) * 1000);
       }
-      resolve({ failures, connections });
+      resolve({
+        failures,
+        connections,
+        timing: { handshake: stats(handshakeMs), response: stats(responseMs) },
+      });
     });
     curl.stdin.end(config.join('\n') + '\n');
   });
