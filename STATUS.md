@@ -1,6 +1,6 @@
 # TRR DoH monitor status
 
-Updated 2026-11-16 07:29 UTC. Last request probe: 2026-11-16 02:13 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
+Updated 2026-11-16 09:52 UTC. Last request probe: 2026-11-16 09:52 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
 
 ✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed.
 
@@ -10,7 +10,7 @@ Updated 2026-11-16 07:29 UTC. Last request probe: 2026-11-16 02:13 UTC. Last idl
 |---|---|---|---|---|---|---|---|---|
 | cloudflare | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC |
 | nextdns | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
-| cira | ✅ | ⚠️ 28 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
+| cira | ✅ | ⚠️ 43 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC (new value seen 1×) |
 | wikimedia | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
 | quad9 | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC |
 
@@ -35,4 +35,4 @@ Idle lifetime by run (h2 / h3, seconds):
 
 ## Recent changes
 
-None yet.
+- [#1 TRR idle lifetime changed 2026-11-16](https://github.com/acreskeyMoz/trr-doh-monitor/issues/1)
