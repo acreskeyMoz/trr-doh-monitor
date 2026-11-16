@@ -67,21 +67,50 @@ for (const [name, p] of Object.entries(probe)) {
   out += `${c.h3Advertised ? 'advertised' : 'no'} | ${h3.join(' | ')} | ${day(p.since)}${pending(p)} |\n`;
 }
 
-out += `\n## Timing (ms)\n\n`;
-out += `Latest run, median / 90th percentile. Connect is per new connection (h2: TCP + TLS; h3: QUIC handshake); response is per query on an open connection. ${DAYS}-day column: median of each run's median response time.\n\n`;
-out += `| provider | h2 connect (TCP + TLS) | h2 response | h3 connect | h3 response | h2 / h3 response, ${DAYS} days |\n`;
-out += `|---|---|---|---|---|---|\n`;
-const mp = x => (x ? `${x.median} / ${x.p90}` : '—');
-const median = v => (v.length ? [...v].sort((a, b) => a - b)[Math.floor(v.length / 2)] : null);
+out += `\n## Timing\n\n`;
+out += `Response time per query in the latest run: \`█\` up to the median, \`▒\` up to the 90th percentile, on one scale for all providers. `;
+out += `Trend: each run's median h2 response time over the last ${DAYS} days, scaled per provider. `;
+out += `Connect: per new connection (h2: TCP + TLS; h3: QUIC handshake).\n\n`;
+out += `| provider | h2 response | h3 response | h2 trend, ${DAYS} days | connect h2 / h3 |\n`;
+out += `|---|---|---|---|---|\n`;
+const timingOf = raw => ({
+  h2: raw && raw.series && raw.series.timing,
+  h3: raw && raw.h3 && raw.h3.series && raw.h3.series.timing,
+});
+const BAR = 20;
+let scale = 1;
 for (const name of Object.keys(probe)) {
-  const raw = last && last.providers[name];
-  const t = raw && raw.series && raw.series.timing;
-  const t3 = raw && raw.h3 && raw.h3.series && raw.h3.series.timing;
-  const connect = t && t.tcp && t.tls ? `${t.tcp.median} + ${t.tls.median}` : '—';
-  const runs = probeHistory.map(r => r.providers[name]).filter(Boolean);
-  const h2Week = median(runs.map(p => p.series && p.series.timing && p.series.timing.response && p.series.timing.response.median).filter(v => v != null));
-  const h3Week = median(runs.map(p => p.h3 && p.h3.series && p.h3.series.timing && p.h3.series.timing.response && p.h3.series.timing.response.median).filter(v => v != null));
-  out += `| ${name} | ${connect} | ${mp(t && t.response)} | ${mp(t3 && t3.handshake)} | ${mp(t3 && t3.response)} | ${h2Week ?? '—'} / ${h3Week ?? '—'} |\n`;
+  const t = timingOf(last && last.providers[name]);
+  for (const r of [t.h2 && t.h2.response, t.h3 && t.h3.response]) {
+    if (r) scale = Math.max(scale, r.p90);
+  }
+}
+function bar(r) {
+  if (!r) return '—';
+  const m = Math.max(1, Math.round((r.median / scale) * BAR));
+  const p = Math.max(m, Math.round((r.p90 / scale) * BAR));
+  return `\`${'█'.repeat(m)}${'▒'.repeat(p - m)}${'░'.repeat(BAR - p)}\` ${r.median} / ${r.p90} ms`;
+}
+function sparkline(values) {
+  if (values.length < 2) return '—';
+  const ticks = '▁▂▃▄▅▆▇█';
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const line = values
+    .map(v => ticks[hi == lo ? 0 : Math.round(((v - lo) / (hi - lo)) * (ticks.length - 1))])
+    .join('');
+  return `\`${line}\` ${lo}–${hi} ms`;
+}
+for (const name of Object.keys(probe)) {
+  const t = timingOf(last && last.providers[name]);
+  const trend = probeHistory
+    .map(r => timingOf(r.providers[name]).h2)
+    .filter(x => x && x.response)
+    .map(x => x.response.median)
+    .slice(-36);
+  const h2c = t.h2 && t.h2.tcp && t.h2.tls ? `${t.h2.tcp.median} + ${t.h2.tls.median} ms` : '—';
+  const h3c = t.h3 && t.h3.handshake ? `${t.h3.handshake.median} ms` : '—';
+  out += `| ${name} | ${bar(t.h2 && t.h2.response)} | ${bar(t.h3 && t.h3.response)} | ${sparkline(trend)} | ${h2c} / ${h3c} |\n`;
 }
 
 out += `\n## Idle lifetime\n\n`;

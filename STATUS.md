@@ -1,6 +1,6 @@
 # TRR DoH monitor status
 
-Updated 2026-11-16 15:56 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
+Updated 2026-11-16 16:28 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
 
 ✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed.
 
@@ -14,17 +14,17 @@ Updated 2026-11-16 15:56 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idl
 | wikimedia | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
 | quad9 | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC (new value seen 1×) |
 
-## Timing (ms)
+## Timing
 
-Latest run, median / 90th percentile. Connect is per new connection (h2: TCP + TLS; h3: QUIC handshake); response is per query on an open connection. 7-day column: median of each run's median response time.
+Response time per query in the latest run: `█` up to the median, `▒` up to the 90th percentile, on one scale for all providers. Trend: each run's median h2 response time over the last 7 days, scaled per provider. Connect: per new connection (h2: TCP + TLS; h3: QUIC handshake).
 
-| provider | h2 connect (TCP + TLS) | h2 response | h3 connect | h3 response | h2 / h3 response, 7 days |
-|---|---|---|---|---|---|
-| cloudflare | 8 + 9 | 3 / 4 | 10 / 10 | 5 / 6 | 3 / 5 |
-| nextdns | 4 + 7 | 3 / 3 | — | — | 3 / — |
-| cira | 21 + 23 | 20 / 21 | — | — | 20 / — |
-| wikimedia | 2 + 6 | 1 / 3 | — | — | 1 / — |
-| quad9 | 3 + 6 | 2 / 2 | 21 / 21 | 1 / 2 | 2 / 1 |
+| provider | h2 response | h3 response | h2 trend, 7 days | connect h2 / h3 |
+|---|---|---|---|---|
+| cloudflare | `███▒░░░░░░░░░░░░░░░░` 3 / 4 ms | `█████▒░░░░░░░░░░░░░░` 5 / 6 ms | — | 8 + 9 ms / 10 ms |
+| nextdns | `███░░░░░░░░░░░░░░░░░` 3 / 3 ms | — | — | 4 + 7 ms / — |
+| cira | `███████████████████▒` 20 / 21 ms | — | — | 21 + 23 ms / — |
+| wikimedia | `█▒▒░░░░░░░░░░░░░░░░░` 1 / 3 ms | — | — | 2 + 6 ms / — |
+| quad9 | `██░░░░░░░░░░░░░░░░░░` 2 / 2 ms | `█▒░░░░░░░░░░░░░░░░░░` 1 / 2 ms | — | 3 + 6 ms / 21 ms |
 
 ## Idle lifetime
 
