@@ -1,6 +1,6 @@
 # TRR DoH monitor status
 
-Updated 2026-11-16 17:21 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
+Updated 2026-11-16 17:53 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idle lifetime run: 2026-11-16 07:26 UTC.
 
 ✅ as expected, ⚠️ some queries affected, ❌ all queries affected or check failed. Values are from the latest run; "since" is when the confirmed state began.
 
@@ -8,11 +8,11 @@ Updated 2026-11-16 17:21 UTC. Last request probe: 2026-11-16 15:56 UTC. Last idl
 
 | provider | h2 failures | h2 reconnects | h2 idle | h3 | h3 failures | h3 reconnects | h3 idle | since |
 |---|---|---|---|---|---|---|---|---|
-| cloudflare | ✅ | ✅ 0 | ✅ | advertised | ✅ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC |
-| nextdns | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
-| cira | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC → **changed 2026-11-16 15:56 UTC, not yet confirmed (1 run)** |
-| wikimedia | ✅ | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
-| quad9 | ✅ | ✅ 0 | ✅ | advertised | ⚠️ | ✅ 0 | ✅ | 2026-11-15 15:19 UTC → **changed 2026-11-16 15:56 UTC, not yet confirmed (1 run)** |
+| cloudflare | ✅ 0 | ✅ 0 | ✅ | advertised | ✅ 0 | ✅ 0 | ✅ | 2026-11-15 15:19 UTC |
+| nextdns | ✅ 0 | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
+| cira | ✅ 0 | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC → **changed 2026-11-16 15:56 UTC, not yet confirmed (1 run)** |
+| wikimedia | ✅ 0 | ✅ 0 | ✅ | no | — | — | — | 2026-11-15 15:19 UTC |
+| quad9 | ✅ 0 | ✅ 0 | ✅ | advertised | ⚠️ 3 | ✅ 0 | ✅ | 2026-11-15 15:19 UTC → **changed 2026-11-16 15:56 UTC, not yet confirmed (1 run)** |
 
 ## Timing
 

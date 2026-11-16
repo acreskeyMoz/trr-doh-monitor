@@ -64,10 +64,12 @@ for (const [name, p] of Object.entries(probe)) {
   const raw = last && last.providers[name];
   const n = raw ? ` ${reconnects(raw)}` : '';
   const h3n = raw && h3Reconnects(raw) !== null ? ` ${h3Reconnects(raw)}` : '';
+  const f = raw ? ` ${raw.series ? raw.series.failures : raw.failures}` : '';
+  const h3f = raw && raw.h3 ? ` ${raw.h3.series ? raw.h3.series.failures : raw.h3.failures}` : '';
   const h3 = c.h3
-    ? [mark(c.h3.failures), mark(c.h3.reconnects) + h3n, mark(c.h3.idleSurvived)]
+    ? [mark(c.h3.failures) + h3f, mark(c.h3.reconnects) + h3n, mark(c.h3.idleSurvived)]
     : ['—', '—', '—'];
-  out += `| ${name} | ${mark(c.failures)} | ${mark(c.reconnects)}${n} | ${mark(c.idleSurvived)} | `;
+  out += `| ${name} | ${mark(c.failures)}${f} | ${mark(c.reconnects)}${n} | ${mark(c.idleSurvived)} | `;
   out += `${c.h3Advertised ? 'advertised' : 'no'} | ${h3.join(' | ')} | ${day(p.since)}${pending(p)} |\n`;
 }
 
