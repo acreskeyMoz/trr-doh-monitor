@@ -2,29 +2,16 @@
   "cloudflare": {
     "current": {
       "h2": {
-        "lifetime": ">=600s",
-        "end": "cap"
+        "lifetime": "240-420s",
+        "end": "goaway-0"
       },
       "h3": {
         "lifetime": "150-240s",
-        "end": "idle-timeout"
+        "end": "close-256"
       }
     },
-    "since": "2026-11-15T15:42:51.361Z",
-    "pending": {
-      "signature": {
-        "h2": {
-          "lifetime": "240-420s",
-          "end": "goaway-0"
-        },
-        "h3": {
-          "lifetime": "150-240s",
-          "end": "close-256"
-        }
-      },
-      "runs": 1,
-      "first": "2026-11-15T23:18:16.023Z"
-    }
+    "since": "2026-11-15T23:18:16.023Z",
+    "pending": null
   },
   "nextdns": {
     "current": {
@@ -40,23 +27,13 @@
   "cira": {
     "current": {
       "h2": {
-        "lifetime": ">=600s",
-        "end": "cap"
+        "lifetime": "240-420s",
+        "end": "close"
       },
       "h3": null
     },
-    "since": "2026-11-15T15:42:51.361Z",
-    "pending": {
-      "signature": {
-        "h2": {
-          "lifetime": "240-420s",
-          "end": "close"
-        },
-        "h3": null
-      },
-      "runs": 1,
-      "first": "2026-11-15T23:18:16.023Z"
-    }
+    "since": "2026-11-15T23:18:16.023Z",
+    "pending": null
   },
   "quad9": {
     "current": {
