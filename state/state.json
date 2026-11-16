@@ -46,16 +46,14 @@
       "signature": {
         "h2Alpn": "h2",
         "h3Advertised": false,
-        "failures": "some",
-        "reconnects": "some",
-        "closeKinds": [
-          "close"
-        ],
+        "failures": "none",
+        "reconnects": "none",
+        "closeKinds": [],
         "idleSurvived": true,
         "h3": null
       },
       "runs": 1,
-      "first": "2026-11-16T09:52:10.180Z"
+      "first": "2026-11-16T15:56:43.650Z"
     }
   },
   "wikimedia": {
@@ -86,6 +84,22 @@
       }
     },
     "since": "2026-11-15T15:19:51.088Z",
-    "pending": null
+    "pending": {
+      "signature": {
+        "h2Alpn": "h2",
+        "h3Advertised": true,
+        "failures": "none",
+        "reconnects": "none",
+        "closeKinds": [],
+        "idleSurvived": true,
+        "h3": {
+          "failures": "some",
+          "reconnects": "none",
+          "idleSurvived": true
+        }
+      },
+      "runs": 1,
+      "first": "2026-11-16T15:56:43.650Z"
+    }
   }
 }
